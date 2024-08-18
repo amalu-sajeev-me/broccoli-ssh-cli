@@ -1,0 +1,14 @@
+serverConfigs:
+  - name: Server 1
+    localDir: /path/to/local/dir1
+    remoteDir: /path/to/remote/dir1
+    host: example.com
+    username: user1
+    privateKey: /path/to/private/key1
+
+  - name: Server 2
+    localDir: /path/to/local/dir2
+    remoteDir: /path/to/remote/dir2
+    host: example.org
+    username: user2
+    privateKey: /path/to/private/key2

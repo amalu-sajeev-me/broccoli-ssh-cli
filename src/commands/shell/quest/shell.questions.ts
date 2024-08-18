@@ -1,10 +1,11 @@
 import { ChoicesFor, Question, QuestionSet } from 'nest-commander';
-import { serverConfigs } from '../../../config';
+import { EnvProvider } from '../../../providers/env.provider';
 
 @QuestionSet({
   name: 'shell',
 })
 export class ShellQuestions {
+  constructor(private readonly _envProvider: EnvProvider) {}
   //   @Question({
   //     type: 'confirm',
   //     name: 'message',
@@ -20,12 +21,14 @@ export class ShellQuestions {
     message: 'choose your server to connect',
   })
   chooseServer(serverIndex: number) {
+    const serverConfigs = this._envProvider.getServerConfigs();
     return serverConfigs[serverIndex];
   }
   @ChoicesFor({
     name: 'server',
   })
   choices() {
+    const serverConfigs = this._envProvider.getServerConfigs();
     return serverConfigs.map((config, index) => {
       return { name: `${config.name} => ${config.host}`, value: index };
     });

@@ -20,5 +20,8 @@
         "terminal.ansiRed": "#A0A0C5",
         "terminal.ansiWhite": "#F1EFF8",
         "terminal.ansiYellow": "#AE81FF"
-    }
+    },
+    "conventionalCommits.scopes": [
+        "SSH"
+    ]
 }

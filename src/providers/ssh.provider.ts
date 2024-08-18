@@ -4,14 +4,13 @@ import { readFile, readdir, stat } from 'fs/promises';
 import { BaseProvider } from './base-provider';
 import { promisify } from 'util';
 import * as chalk from 'chalk';
+import { ServerConfig } from '../config/config.dto';
 
 @Injectable()
 export class SSHProvider extends BaseProvider {
   private readonly _client: Client;
   private readonly _CONFIG: Exclude<ConnectConfig, 'privateKey'> = {
-    host: '', // replace
     port: 22,
-    username: '', // replace
     readyTimeout: 60000, // Increase timeout to 60 seconds
     keepaliveInterval: 20000, // Send keepalive every 20 seconds
     keepaliveCountMax: 10, // Allow up to 10 keepalives
@@ -21,10 +20,16 @@ export class SSHProvider extends BaseProvider {
     this._client = new Client();
   }
 
-  connect = async (privateKeyPath: string) => {
+  connect = async (serverConfig: ServerConfig) => {
+    Object.assign(this._CONFIG, serverConfig);
+    const { privateKey: privateKeyPath, host, username } = serverConfig;
     const privateKey = await readFile(privateKeyPath);
-    const config: ConnectConfig = { ...this._CONFIG, privateKey };
-    // this._client.on('ready', this.onReady);
+    const config: ConnectConfig = {
+      ...this._CONFIG,
+      privateKey,
+      host,
+      username,
+    };
     this._client.on('connect', this.onConnect);
     this._client.connect(config);
     return this;

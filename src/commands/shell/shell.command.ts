@@ -19,7 +19,7 @@ export class ShellCommand extends CommandRunner {
       'server',
       ServerConfig
     >;
-    await this._sshProvider.connect(server.privateKey);
+    await this._sshProvider.connect(server);
     await this._sshProvider.startInteractiveShell();
   };
 }
