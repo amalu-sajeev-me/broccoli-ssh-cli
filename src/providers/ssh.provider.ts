@@ -42,7 +42,9 @@ export class SSHProvider extends BaseProvider {
         channel.on('data', (chunk: Buffer) => {
           const prompt = chalk.blue(`@${this._CONFIG.host}`);
           console.log(chunk.toString());
-          this.logger.log(`${prompt} ~>`);
+          if (chunk.toString().endsWith('\n')) {
+            process.stdout.write(`[BROCCOLI-SSH-CLI] ${prompt} ~>`);
+          }
         });
         channel.on('error', (err) => {
           this.logger.error(err.message);
