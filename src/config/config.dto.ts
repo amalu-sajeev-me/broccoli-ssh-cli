@@ -1,4 +1,10 @@
-import { IsString, IsNotEmpty } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  ArrayNotEmpty,
+  IsArray,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class ServerConfig {
@@ -28,7 +34,10 @@ export class ServerConfig {
 }
 
 export class AppConfig {
-  @Type(() => ServerConfig)
+  @Type(() => ServerConfig, {})
+  @ArrayNotEmpty()
+  @IsArray()
+  @ValidateNested({ each: true })
   @IsNotEmpty()
   serverConfigs: ServerConfig[];
 }

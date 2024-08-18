@@ -23,7 +23,6 @@ import { EnvProvider } from './providers/env.provider';
           });
           if (errors.length > 0)
             throw new Error(`Configuration validation error: ${errors}`);
-          console.log({ config, configInstance });
           return configInstance;
         },
       ],
