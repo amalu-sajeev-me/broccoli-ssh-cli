@@ -1,9 +1,13 @@
 {
-  "name": "sync-cli",
+  "name": "broccoli-ssh-cli",
   "version": "0.0.1",
   "description": "",
-  "author": "",
-  "private": true,
+  "author": {
+    "name": "AMALU SAJEEV",
+    "email": "amalu.sajeev.me@gmail.com",
+    "url": "https://github.com/amalu-sajeev-me"
+  },
+  "private": false,
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
@@ -20,7 +24,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "bin": {
-    "workcli": "./dist/main.js"
+    "broccoli": "./dist/main.js"
   },
   "dependencies": {
     "@inquirer/prompts": "^5.3.8",
