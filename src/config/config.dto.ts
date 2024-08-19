@@ -4,6 +4,8 @@ import {
   ArrayNotEmpty,
   IsArray,
   ValidateNested,
+  IsIP,
+  MinLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -22,10 +24,12 @@ export class ServerConfig {
 
   @IsString()
   @IsNotEmpty()
+  @IsIP()
   host: string;
 
   @IsString()
   @IsNotEmpty()
+  @MinLength(4)
   username: string;
 
   @IsString()

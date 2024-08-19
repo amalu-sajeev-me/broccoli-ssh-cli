@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { Client, ConnectConfig, SFTPWrapper, Stats } from 'ssh2';
+import { Client, ClientChannel, ConnectConfig, SFTPWrapper, Stats } from 'ssh2';
 import { readFile, readdir, stat } from 'fs/promises';
 import { BaseProvider } from './base-provider';
 import { promisify } from 'util';
 import * as chalk from 'chalk';
 import { ServerConfig } from '../config/config.dto';
+import { createInterface } from 'readline/promises';
+import { spawn } from 'child_process';
 
 @Injectable()
 export class SSHProvider extends BaseProvider {
@@ -38,17 +40,7 @@ export class SSHProvider extends BaseProvider {
   startInteractiveShell = async () => {
     this._client.once('ready', () => {
       this._client.shell(false, {}, (err, channel) => {
-        if (err) return this.logger.error(err.message);
-        channel.on('data', (chunk: Buffer) => {
-          const prompt = chalk.blue(`@${this._CONFIG.host}`);
-          console.log(chunk.toString());
-          if (chunk.toString().endsWith('\n')) {
-            process.stdout.write(`[BROCCOLI-SSH-CLI] ${prompt} ~>`);
-          }
-        });
-        channel.on('error', (err) => {
-          this.logger.error(err.message);
-        });
+        const prompt = chalk.blue(`@${this._CONFIG.host}`);
         channel.write('source ~/.bashrc\n');
         channel.write('source ~/.profile\n');
         channel.write(
@@ -57,12 +49,38 @@ export class SSHProvider extends BaseProvider {
         channel.write(
           `export PATH=$PATH:/home/ubuntu/.nvm/versions/node/v20.13.1/bin\n`,
         );
-
+        this.terminalSetup(channel, `[BROCCOLI-SSH-CLI] ${prompt} ~>`);
+        if (err) return this.logger.error(err.message);
         this.logger.info('Interactive shell ready to use');
-        // channel.stdout.pipe(process.stdout);
-        channel.stderr.pipe(process.stderr);
-        process.stdin.pipe(channel.stdin);
       });
+    });
+  };
+
+  terminalSetup = (channel: ClientChannel, prompt: string) => {
+    const rl = createInterface({
+      input: process.stdin,
+      output: process.stdout,
+      terminal: true,
+      prompt,
+    });
+    const displayPromptCB = () => rl.prompt();
+    console.log('events', channel.eventNames());
+    channel.pipe(process.stdout);
+    channel.on('error', (err) => console.log(err));
+    // channel.stderr.pipe(process.stderr);
+    channel.on('data', displayPromptCB);
+    rl.on('line', (input) => {
+      channel.write(input + '\n');
+      if (input === '') displayPromptCB();
+    });
+
+    channel.on('close', () => {
+      rl.close();
+      console.log(chalk.yellow('Connection closed.'));
+      this._client.end();
+    });
+    rl.on('SIGINT', () => {
+      channel.close();
     });
   };
   onReady = async () => {
@@ -161,6 +179,25 @@ export class SSHProvider extends BaseProvider {
           console.log(`${item.name} is a Directory`);
         }
       });
+    });
+  }
+  runNativeSSHCommand(server: ServerConfig) {
+    const { privateKey, username, host, localDir } = server;
+    const sshCommand = `ssh -i ${privateKey} ${username}@${host}`;
+
+    const [command, ...args] = sshCommand.split(' ');
+    const sshProcess = spawn(command, args, {
+      stdio: 'inherit',
+      shell: true,
+      cwd: localDir,
+    });
+    this.logger.success(`BROCCOLI SSH CLI`);
+
+    sshProcess.on('exit', (code) => {
+      this.logger.info(`SSH session exited with code ${code}`);
+    });
+    sshProcess.on('error', (err) => {
+      this.logger.error(`Failed to start SSH session: ${err.message}`);
     });
   }
 }
